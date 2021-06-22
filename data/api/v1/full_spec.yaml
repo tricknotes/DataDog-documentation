@@ -893,6 +893,15 @@ components:
           type: array
         reflow_type:
           $ref: '#/components/schemas/DashboardReflowType'
+        restricted_roles:
+          description: A list of role identifiers. Only the author and users associated
+            with at least one of these roles can edit this dashboard. Overrides the
+            `is_read_only` property if both are present. **This feature is currently
+            in beta.**
+          items:
+            description: A role UUID.
+            type: string
+          type: array
         template_variable_presets:
           description: Array of template variables saved views.
           items:
@@ -4874,6 +4883,11 @@ components:
             $ref: '#/components/schemas/Point'
           readOnly: true
           type: array
+        query_index:
+          description: The index of the series' query within the request.
+          format: int64
+          readOnly: true
+          type: integer
         scope:
           description: Metric scope, comma separated list of tags.
           example: host:foo,env:test
@@ -4884,6 +4898,13 @@ components:
           format: int64
           readOnly: true
           type: integer
+        tag_set:
+          description: Unique tags identifying this series.
+          items:
+            description: Unique tags identifying this series.
+            type: string
+          readOnly: true
+          type: array
         unit:
           description: 'Detailed information about the metric unit.
 
@@ -4951,6 +4972,7 @@ components:
     MetricsQueryUnit:
       description: Object containing the metric unit family, scale factor, name, and
         short name.
+      nullable: true
       properties:
         family:
           description: Unit family, allows for conversion between units of the same
@@ -5028,6 +5050,7 @@ components:
           type: integer
         query:
           description: The monitor query.
+          example: avg(last_5m):sum:system.net.bytes_rcvd{host:host0} > 100
           type: string
         restricted_roles:
           description: A list of role identifiers that can be pulled from the Roles
@@ -5046,6 +5069,9 @@ components:
           type: array
         type:
           $ref: '#/components/schemas/MonitorType'
+      required:
+      - type
+      - query
       type: object
     MonitorDeviceID:
       description: ID of the device the Synthetics monitor is running on. Same as
@@ -5072,7 +5098,7 @@ components:
       - FIREFOX_TABLET
       - FIREFOX_MOBILE_SMALL
     MonitorGroupSearchResponse:
-      description: ''
+      description: The response of a monitor group search.
       example:
         counts:
           status:
@@ -5105,7 +5131,7 @@ components:
           total_count: 2
       properties:
         counts:
-          description: ''
+          description: The counts of monitor groups per different criteria.
           properties:
             status:
               $ref: '#/components/schemas/MonitorSearchCount'
@@ -5114,7 +5140,7 @@ components:
           readOnly: true
           type: object
         groups:
-          description: ''
+          description: The list of found monitor groups.
           items:
             $ref: '#/components/schemas/MonitorGroupSearchResult'
           readOnly: true
@@ -5123,22 +5149,22 @@ components:
           $ref: '#/components/schemas/MonitorSearchResponseMetadata'
       type: object
     MonitorGroupSearchResult:
-      description: ''
+      description: A single monitor group search result.
       properties:
         group:
-          description: ''
+          description: The name of the group.
           readOnly: true
           type: string
         group_tags:
-          description: ''
+          description: The list of tags of the monitor group.
           items:
-            description: ''
+            description: One monitor group tag.
             readOnly: true
             type: string
           readOnly: true
           type: array
         last_nodata_ts:
-          description: ''
+          description: Latest timestamp the monitor group was in NO_DATA state.
           format: int64
           readOnly: true
           type: integer
@@ -5362,7 +5388,7 @@ components:
         type: object
       type: array
     MonitorSearchResponse:
-      description: ''
+      description: The response form a monitor search.
       example:
         counts:
           muted:
@@ -5389,19 +5415,15 @@ components:
         monitors:
         - classification: metric
           creator:
-            handle: xxxx@datadoghq.com
-            id:
-              handle: xxxx@datadoghq.com
-              id: 1234
-              name: xxxx@datadoghq.com
-            name: xxxx@datadoghq.com
+            handle: john@datadoghq.com
+            name: John Doe
           id: 2699850
           last_triggered_ts: null
           metrics:
           - system.cpu.user
           name: Cassandra CPU is high on {{host.name}} in {{availability-zone.name}}
           notifications:
-          - handle: xxxx@datadoghq.com
+          - handle: jane@datadoghq.com
             name: Jane Doe
           org_id: 1234
           scopes:
@@ -5413,7 +5435,7 @@ components:
           type: metric alert
       properties:
         counts:
-          description: ''
+          description: The counts of monitors per different criteria.
           properties:
             muted:
               $ref: '#/components/schemas/MonitorSearchCount'
@@ -5428,14 +5450,14 @@ components:
         metadata:
           $ref: '#/components/schemas/MonitorSearchResponseMetadata'
         monitors:
-          description: ''
+          description: The list of found monitors.
           items:
             $ref: '#/components/schemas/MonitorSearchResult'
           readOnly: true
           type: array
       type: object
     MonitorSearchResponseMetadata:
-      description: ''
+      description: Metadata about the response.
       properties:
         page:
           description: The page to start paginating from.
@@ -5462,26 +5484,26 @@ components:
       description: Holds search results.
       properties:
         classification:
-          description: ''
+          description: Classification of the monitor.
           readOnly: true
           type: string
         creator:
           $ref: '#/components/schemas/Creator'
         id:
-          description: ID of this monitor.
+          description: ID of the monitor.
           format: int64
           readOnly: true
           type: integer
         last_triggered_ts:
-          description: Latest timestamp the monitor group triggered.
+          description: Latest timestamp the monitor triggered.
           format: int64
           nullable: true
           readOnly: true
           type: integer
         metrics:
-          description: ''
+          description: Metrics used by the monitor.
           items:
-            description: ''
+            description: A metric used by the monitor.
             readOnly: true
             type: string
           readOnly: true
@@ -5497,7 +5519,7 @@ components:
           readOnly: true
           type: array
         org_id:
-          description: ''
+          description: The ID of the organization.
           format: int64
           readOnly: true
           type: integer
@@ -5520,9 +5542,9 @@ components:
         status:
           $ref: '#/components/schemas/MonitorOverallStates'
         tags:
-          description: Tags associated to your monitor.
+          description: Tags associated with the monitor.
           items:
-            description: ''
+            description: A tag associated with the monitor.
             readOnly: true
             type: string
           readOnly: true
@@ -5531,7 +5553,7 @@ components:
           $ref: '#/components/schemas/MonitorType'
       type: object
     MonitorSearchResultNotification:
-      description: ''
+      description: A notification triggered by the monitor.
       properties:
         handle:
           description: The email address that received the notification.
@@ -5703,6 +5725,7 @@ components:
       - trace-analytics alert
       - slo alert
       - event-v2 alert
+      example: metric alert
       type: string
       x-enum-varnames:
       - COMPOSITE
@@ -7269,7 +7292,14 @@ components:
 
                 If a metric query only has one unit object, the second array element
                 is null.'
-              example: '[{"family":"bytes","scale_factor":1.0,"name":"byte","short_name":"B","plural":"bytes","id":2},null]'
+              example:
+              - family: bytes
+                id: 2
+                name: byte
+                plural: bytes
+                scale_factor: 1.0
+                short_name: B
+              - null
               items:
                 $ref: '#/components/schemas/SLOHistoryMetricsSeriesMetadataUnit'
               nullable: true
@@ -8989,8 +9019,6 @@ components:
           items:
             $ref: '#/components/schemas/SyntheticsAPIStep'
           type: array
-      required:
-      - assertions
       type: object
     SyntheticsAPITestResultData:
       description: Object containing results for your Synthetic API test.
@@ -9128,7 +9156,6 @@ components:
               type: string
             targetValue:
               description: The path target value to compare to.
-              type: object
           type: object
         type:
           $ref: '#/components/schemas/SyntheticsAssertionType'
@@ -9623,6 +9650,9 @@ components:
         example:
           description: Example for the variable.
           type: string
+        id:
+          description: ID of the variable for global variables.
+          type: string
         name:
           description: Name of the variable.
           example: VARIABLE_NAME
@@ -9633,16 +9663,17 @@ components:
         type:
           $ref: '#/components/schemas/SyntheticsConfigVariableType'
       required:
-      - example
       - type
       - name
       type: object
     SyntheticsConfigVariableType:
       description: Type of the configuration variable.
       enum:
+      - global
       - text
       type: string
       x-enum-varnames:
+      - GLOBAL
       - TEXT
     SyntheticsCoreWebVitals:
       description: Core Web Vitals attached to a browser test step.
@@ -9884,6 +9915,15 @@ components:
             the value will not be present if the variable is secure.'
           example: example-value
           type: string
+      type: object
+    SyntheticsListGlobalVariablesResponse:
+      description: Object containing an array of Synthetic global variables.
+      properties:
+        variables:
+          description: Array of Synthetic global variables.
+          items:
+            $ref: '#/components/schemas/SyntheticsGlobalVariable'
+          type: array
       type: object
     SyntheticsListTestsResponse:
       description: Object containing an array of Synthetic tests configuration.
@@ -10284,8 +10324,6 @@ components:
           items:
             $ref: '#/components/schemas/SyntheticsBrowserVariable'
           type: array
-      required:
-      - assertions
       type: object
     SyntheticsTestDetails:
       description: Object containing details about your Synthetic test.
@@ -10418,6 +10456,10 @@ components:
             an alert.'
           format: int64
           type: integer
+        monitor_name:
+          description: The monitor name is used for the alert title as well as for
+            all monitor dashboard widgets and SLOs.
+          type: string
         monitor_options:
           description: 'Object containing the options for a Synthetic test as a monitor
 
@@ -10433,6 +10475,12 @@ components:
               minimum: 0
               type: integer
           type: object
+        monitor_priority:
+          description: Integer from 1 (high) to 5 (low) indicating alert severity.
+          format: int32
+          maximum: 5
+          minimum: 1
+          type: integer
         noScreenshot:
           description: Prevents saving screenshots of the steps.
           type: boolean
@@ -11154,6 +11202,11 @@ components:
         public_id:
           description: The organization public ID.
           type: string
+        tag_config_source:
+          description: The source of the usage attribution tag configuration and the
+            selected tags in the format `<source_org_name>:<selected tag 1>-<selected
+            tag 2>-<selected tag 3>`.
+          type: string
         tags:
           $ref: '#/components/schemas/UsageAttributionTagNames'
         updated_at:
@@ -11365,6 +11418,23 @@ components:
           description: The custom metrics usage by tag(s).
           format: double
           type: number
+        cws_container_percentage:
+          description: The percentage of Cloud Workload Security container usage by
+            tag(s)
+          format: double
+          type: number
+        cws_container_usage:
+          description: The Cloud Workload Security container usage by tag(s)
+          format: double
+          type: number
+        cws_host_percentage:
+          description: The percentage of Cloud Workload Security host usage by tag(s)
+          format: double
+          type: number
+        cws_host_usage:
+          description: The Cloud Workload Security host usage by tag(s)
+          format: double
+          type: number
         infra_host_percentage:
           description: The percentage of infrastructure host usage by tag(s).
           format: double
@@ -11435,6 +11505,29 @@ components:
           description: The network device usage by tag(s).
           format: double
           type: number
+      type: object
+    UsageAuditLogsHour:
+      description: Audit logs usage for a given organization for a given hour.
+      properties:
+        hour:
+          description: The hour for the usage.
+          format: date-time
+          type: string
+        lines_indexed:
+          description: The total number of audit logs lines indexed during a given
+            hour.
+          format: int64
+          type: integer
+      type: object
+    UsageAuditLogsResponse:
+      description: Response containing the audit logs usage for each hour for a given
+        organization.
+      properties:
+        usage:
+          description: Get hourly usage for audit logs.
+          items:
+            $ref: '#/components/schemas/UsageAuditLogsHour'
+          type: array
       type: object
     UsageBillableSummaryBody:
       description: Response with properties for each aggregated usage type.
@@ -11519,13 +11612,39 @@ components:
           $ref: '#/components/schemas/UsageBillableSummaryBody'
         lambda_function_average:
           $ref: '#/components/schemas/UsageBillableSummaryBody'
+        logs_indexed_15day_sum:
+          $ref: '#/components/schemas/UsageBillableSummaryBody'
+        logs_indexed_180day_sum:
+          $ref: '#/components/schemas/UsageBillableSummaryBody'
+        logs_indexed_30day_sum:
+          $ref: '#/components/schemas/UsageBillableSummaryBody'
+        logs_indexed_3day_sum:
+          $ref: '#/components/schemas/UsageBillableSummaryBody'
+        logs_indexed_45day_sum:
+          $ref: '#/components/schemas/UsageBillableSummaryBody'
+        logs_indexed_60day_sum:
+          $ref: '#/components/schemas/UsageBillableSummaryBody'
+        logs_indexed_7day_sum:
+          $ref: '#/components/schemas/UsageBillableSummaryBody'
+        logs_indexed_90day_sum:
+          $ref: '#/components/schemas/UsageBillableSummaryBody'
+        logs_indexed_custom_retention_sum:
+          $ref: '#/components/schemas/UsageBillableSummaryBody'
         logs_indexed_sum:
           $ref: '#/components/schemas/UsageBillableSummaryBody'
         logs_ingested_sum:
           $ref: '#/components/schemas/UsageBillableSummaryBody'
+        network_device_top99p:
+          $ref: '#/components/schemas/UsageBillableSummaryBody'
         npm_flow_sum:
           $ref: '#/components/schemas/UsageBillableSummaryBody'
+        npm_host_sum:
+          $ref: '#/components/schemas/UsageBillableSummaryBody'
         npm_host_top99p:
+          $ref: '#/components/schemas/UsageBillableSummaryBody'
+        prof_container_sum:
+          $ref: '#/components/schemas/UsageBillableSummaryBody'
+        prof_host_top99p:
           $ref: '#/components/schemas/UsageBillableSummaryBody'
         rum_sum:
           $ref: '#/components/schemas/UsageBillableSummaryBody'
@@ -11549,18 +11668,18 @@ components:
             $ref: '#/components/schemas/UsageBillableSummaryHour'
           type: array
       type: object
-    UsageComplianceHour:
-      description: Compliance Monitoring usage for a given organization for a given
+    UsageCWSHour:
+      description: Cloud Workload Security usage for a given organization for a given
         hour.
       properties:
-        compliance_container_count:
-          description: The total number of compliance container hours from the start
-            of the given hour's month until the given hour.
+        cws_container_count:
+          description: "The total number of Cloud Workload Security container hours\
+            \ from the start of the given hour\u2019s month until the given hour."
           format: int64
           type: integer
-        compliance_host_count:
-          description: The total number of compliance hosts hours from the start of
-            the given hour's month until the given hour.
+        cws_host_count:
+          description: "The total number of Cloud Workload Security host hours from\
+            \ the start of the given hour\u2019s month until the given hour."
           format: int64
           type: integer
         hour:
@@ -11568,14 +11687,43 @@ components:
           format: date-time
           type: string
       type: object
-    UsageComplianceResponse:
-      description: The response containing the Compliance Monitoring usage for each
+    UsageCWSResponse:
+      description: Response containing the Cloud Workload Security usage for each
         hour for a given organization.
       properties:
         usage:
-          description: Get hourly usage for Compliance Monitoring.
+          description: Get hourly usage for Cloud Workload Security.
           items:
-            $ref: '#/components/schemas/UsageComplianceHour'
+            $ref: '#/components/schemas/UsageCWSHour'
+          type: array
+      type: object
+    UsageCloudSecurityPostureManagementHour:
+      description: Cloud Security Posture Management usage for a given organization
+        for a given hour.
+      properties:
+        container_count:
+          description: The total number of Cloud Security Posture Management containers
+            during a given hour.
+          format: int64
+          type: integer
+        host_count:
+          description: The total number of Cloud Security Posture Management hosts
+            during a given hour.
+          format: int64
+          type: integer
+        hour:
+          description: The hour for the usage.
+          format: date-time
+          type: string
+      type: object
+    UsageCloudSecurityPostureManagementResponse:
+      description: The response containing the Cloud Security Posture Management usage
+        for each hour for a given organization.
+      properties:
+        usage:
+          description: Get hourly usage for Cloud Security Posture Management.
+          items:
+            $ref: '#/components/schemas/UsageCloudSecurityPostureManagementHour'
           type: array
       type: object
     UsageCustomReportsAttributes:
@@ -12243,6 +12391,11 @@ components:
             hours in the current date for all organizations.
           format: int64
           type: integer
+        audit_logs_lines_indexed_sum:
+          description: Shows the sum of audit logs lines indexed over all hours in
+            the current date for all organizations.
+          format: int64
+          type: integer
         aws_host_top99p:
           description: Shows the 99th percentile of all AWS hosts over all hours in
             the current date for all organizations.
@@ -12268,14 +12421,6 @@ components:
             current date for all organizations.
           format: int64
           type: integer
-        compliance_container_count_sum:
-          description: Shows the sum of compliance containers over all hours in the
-            current date for all organizations.
-        compliance_host_count_sum:
-          description: Shows the sum of compliance hosts over all hours in the current
-            date for all organizations.
-          format: int64
-          type: integer
         container_avg:
           description: Shows the average of all distinct containers over all hours
             in the current date for all organizations.
@@ -12286,9 +12431,34 @@ components:
             hours in the current date for all organizations.
           format: int64
           type: integer
+        cspm_container_avg:
+          description: Shows the average number of Cloud Security Posture Management
+            containers over all hours in the current date for all organizations.
+          format: int64
+          type: integer
+        cspm_container_hwm:
+          description: Shows the high-water mark of Cloud Security Posture Management
+            containers over all hours in the current date for all organizations.
+          format: int64
+          type: integer
+        cspm_host_top99p:
+          description: Shows the 99th percentile of all Cloud Security Posture Management
+            hosts over all hours in the current date for all organizations.
+          format: int64
+          type: integer
         custom_ts_avg:
           description: Shows the average number of distinct custom metrics over all
             hours in the current date for all organizations.
+          format: int64
+          type: integer
+        cws_container_count_avg:
+          description: Shows the average of all distinct Cloud Workload Security containers
+            over all hours in the current date for all organizations.
+          format: int64
+          type: integer
+        cws_host_top99p:
+          description: Shows the 99th percentile of all Cloud Workload Security hosts
+            over all hours in the current date for all organizations.
           format: int64
           type: integer
         date:
@@ -12441,6 +12611,11 @@ components:
             hours in the current date for the given org.
           format: int64
           type: integer
+        audit_logs_lines_indexed_sum:
+          description: Shows the sum of all audit logs lines indexed over all hours
+            in the current date for the given org.
+          format: int64
+          type: integer
         aws_host_top99p:
           description: Shows the 99th percentile of all AWS hosts over all hours in
             the current date for the given org.
@@ -12466,14 +12641,6 @@ components:
             current date for the given org.
           format: int64
           type: integer
-        compliance_container_agg_sum:
-          description: Shows the sum of all compliance containers over all hours in
-            the current date for the given org.
-        compliance_host_agg_sum:
-          description: Shows the sum of all compliance hosts over all hours in the
-            current date for the given org.
-          format: int64
-          type: integer
         container_avg:
           description: Shows the average of all distinct containers over all hours
             in the current date for the given org.
@@ -12484,9 +12651,34 @@ components:
             hours in the current date for the given org.
           format: int64
           type: integer
+        cspm_container_avg:
+          description: Shows the average number of Cloud Security Posture Management
+            containers over all hours in the current date for the given org.
+          format: int64
+          type: integer
+        cspm_container_hwm:
+          description: Shows the high-water mark of Cloud Security Posture Management
+            containers over all hours in the current date for the given org.
+          format: int64
+          type: integer
+        cspm_host_top99p:
+          description: Shows the 99th percentile of all Cloud Security Posture Management
+            hosts over all hours in the current date for the given org.
+          format: int64
+          type: integer
         custom_ts_avg:
           description: Shows the average number of distinct custom metrics over all
             hours in the current date for the given org.
+          format: int64
+          type: integer
+        cws_container_count_avg:
+          description: Shows the average of all distinct Cloud Workload Security containers
+            over all hours in the current date for the given org.
+          format: int64
+          type: integer
+        cws_host_top99p:
+          description: Shows the 99th percentile of all Cloud Workload Security hosts
+            over all hours in the current date for the given org.
           format: int64
           type: integer
         fargate_tasks_count_avg:
@@ -12637,6 +12829,11 @@ components:
             hours in the current months for all organizations.
           format: int64
           type: integer
+        audit_logs_lines_indexed_agg_sum:
+          description: Shows the sum of all audit logs lines indexed over all hours
+            in the current months for all organizations.
+          format: int64
+          type: integer
         aws_host_top99p_sum:
           description: Shows the 99th percentile of all AWS hosts over all hours in
             the current months for all organizations.
@@ -12667,14 +12864,6 @@ components:
             current months for all organizations.
           format: int64
           type: integer
-        compliance_container_agg_sum:
-          description: Shows the sum of all compliance containers over all hours in
-            the current months for all organizations.
-        compliance_host_agg_sum:
-          description: Shows the sum of all compliance hosts over all hours in the
-            current months for all organizations.
-          format: int64
-          type: integer
         container_avg_sum:
           description: Shows the average of all distinct containers over all hours
             in the current months for all organizations.
@@ -12685,9 +12874,35 @@ components:
             over all hours in the current months for all organizations.
           format: int64
           type: integer
+        cspm_container_avg_sum:
+          description: Shows the average number of Cloud Security Posture Management
+            containers over all hours in the current months for all organizations.
+          format: int64
+          type: integer
+        cspm_container_hwm_sum:
+          description: Shows the sum of the the high-water marks of Cloud Security
+            Posture Management containers over all hours in the current months for
+            all organizations.
+          format: int64
+          type: integer
+        cspm_host_top99p_sum:
+          description: Shows the 99th percentile of all Cloud Security Posture Management
+            hosts over all hours in the current months for all organizations.
+          format: int64
+          type: integer
         custom_ts_sum:
           description: Shows the average number of distinct custom metrics over all
             hours in the current months for all organizations.
+          format: int64
+          type: integer
+        cws_containers_avg_sum:
+          description: Shows the average of all distinct Cloud Workload Security containers
+            over all hours in the current months for all organizations.
+          format: int64
+          type: integer
+        cws_host_top99p_sum:
+          description: Shows the 99th percentile of all Cloud Workload Security hosts
+            over all hours in the current months for all organizations.
           format: int64
           type: integer
         end_date:
@@ -12985,9 +13200,13 @@ components:
         day:
           description: The day value from the user request that contains the returned
             usage data. (If day was used the request)
+          format: date-time
+          type: string
         month:
           description: The month value from the user request that contains the returned
             usage data. (If month was used the request)
+          format: date-time
+          type: string
         pagination:
           $ref: '#/components/schemas/UsageAttributionPagination'
       type: object
@@ -18822,6 +19041,7 @@ paths:
         name: group_states
         required: false
         schema:
+          example: alert
           type: string
       - description: A string to filter monitors by name.
         in: query
@@ -18837,6 +19057,7 @@ paths:
         name: tags
         required: false
         schema:
+          example: host:host0
           type: string
       - description: 'A comma separated list indicating what service and/or custom
           tags, if any, should be used to filter the list of monitors.
@@ -18847,6 +19068,7 @@ paths:
         name: monitor_tags
         required: false
         schema:
+          example: service:my-app
           type: string
       - description: If this argument is set to true, then the returned data includes
           all current downtimes for each monitor.
@@ -18868,6 +19090,7 @@ paths:
         name: page
         required: false
         schema:
+          example: 0
           format: int64
           type: integer
       - description: The number of monitors to return per page. If the page argument
@@ -18878,6 +19101,7 @@ paths:
         name: page_size
         required: false
         schema:
+          example: 20
           format: int32
           maximum: 1000
           type: integer
@@ -19009,19 +19233,27 @@ paths:
         **Service Check Query**
 
 
-        Example: `"check".over(tags).last(count).count_by_status()`
+        Example: `"check".over(tags).last(count).by(group).count_by_status()`
 
 
         - **`check`** name of the check, e.g. `datadog.agent.up`
 
         - **`tags`** one or more quoted tags (comma-separated), or "*". e.g.: `.over("env:prod",
-        "role:db")`
+        "role:db")`; **`over`** cannot be blank.
 
         - **`count`** must be at greater than or equal to your max threshold (defined
         in the `options`). It is limited to 100.
 
         For example, if you''ve specified to notify on 1 critical, 3 ok, and 2 warn
-        statuses, `count` should be 3.
+        statuses, `count` should be at least 3.
+
+        - **`group`** must be specified for check monitors. Per-check grouping is
+        already explicitly known for some service checks.
+
+        For example, Postgres integration monitors are tagged by `db`, `host`, and
+        `port`, and Network monitors by `host`, `instance`, and `url`. See [Service
+        Checks](https://docs.datadoghq.com/api/latest/service-checks/) documentation
+        for more information.
 
 
         **Event Alert Query**
@@ -19174,6 +19406,19 @@ paths:
       requestBody:
         content:
           application/json:
+            examples:
+              json-request-body:
+                value:
+                  message: You may need to add web hosts if this is consistently high.
+                  name: Bytes received on host0
+                  options:
+                    no_data_timeframe: 20
+                    notify_no_data: true
+                  query: avg(last_5m):sum:system.net.bytes_rcvd{host:host0} > 100
+                  tags:
+                  - app:webserver
+                  - frontend
+                  type: metric alert
             schema:
               $ref: '#/components/schemas/Monitor'
         description: Create a monitor request body.
@@ -19433,7 +19678,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Monitor'
+                example: {}
+                type: object
           description: OK
         '400':
           content:
@@ -19472,6 +19718,7 @@ paths:
         name: force
         required: false
         schema:
+          example: 'false'
           type: string
       responses:
         '200':
@@ -20531,13 +20778,13 @@ paths:
     post:
       description: "The metrics end-point allows you to post time-series data that\
         \ can be graphed on Datadog\u2019s dashboards.\nThe maximum payload size is\
-        \ 3.2 megabytes (3200000). Compressed payloads must have a decompressed size\
-        \ of up to 62 megabytes (62914560).\n\nIf you\u2019re submitting metrics directly\
-        \ to the Datadog API without using DogStatsD, expect\n\n- 64 bits for the\
-        \ timestamp\n- 32 bits for the value\n- 20 bytes for the metric names\n- 50\
-        \ bytes for the timeseries\n- The full payload is approximately ~ 100 bytes.\
-        \ However, with the DogStatsD API,\ncompression is applied, which reduces\
-        \ the payload size."
+        \ 3.2 megabytes (3200000 bytes). Compressed payloads must have a decompressed\
+        \ size of less than 62 megabytes (62914560 bytes).\n\nIf you\u2019re submitting\
+        \ metrics directly to the Datadog API without using DogStatsD, expect:\n\n\
+        - 64 bits for the timestamp\n- 32 bits for the value\n- 20 bytes for the metric\
+        \ names\n- 50 bytes for the timeseries\n- The full payload is approximately\
+        \ 100 bytes. However, with the DogStatsD API,\ncompression is applied, which\
+        \ reduces the payload size."
       operationId: SubmitMetrics
       requestBody:
         content:
@@ -20775,6 +21022,20 @@ paths:
         required: false
         schema:
           type: string
+      - description: The number of SLOs to return in the response.
+        in: query
+        name: limit
+        required: false
+        schema:
+          format: int64
+          type: integer
+      - description: The specific offset to use as the beginning of the returned response.
+        in: query
+        name: offset
+        required: false
+        schema:
+          format: int64
+          type: integer
       responses:
         '200':
           content:
@@ -21018,10 +21279,10 @@ paths:
           parameters:
           - name: body
             value: "{\n  \"data\": {\n    \"attributes\": {\n      \"slo_id\": \"\
-              {{ slo.data[0].id }}\",\n      \"start\": {{ now_ts }},\n      \"end\"\
-              : {{ hour_later_ts }},\n      \"category\": \"Other\",\n      \"timezone\"\
-              : \"UTC\",\n      \"description\": \"Test Correction\"\n     },\n  \
-              \   \"type\": \"correction\"\n  }\n}"
+              {{ slo.data[0].id }}\",\n      \"start\": {{ timestamp(\"now\") }},\n\
+              \      \"end\": {{ timestamp(\"now + 1h\") }},\n      \"category\":\
+              \ \"Other\",\n      \"timezone\": \"UTC\",\n      \"description\": \"\
+              Test Correction\"\n     },\n     \"type\": \"correction\"\n  }\n}"
           step: there is a valid "correction" for "slo"
       x-menu-order: 1
       x-undo:
@@ -21394,7 +21655,7 @@ paths:
       summary: Get all locations (public and private)
       tags:
       - Synthetics
-      x-menu-order: 22
+      x-menu-order: 23
       x-undo:
         type: safe
   /api/v1/synthetics/private-locations:
@@ -21431,7 +21692,7 @@ paths:
       tags:
       - Synthetics
       x-codegen-request-body-name: body
-      x-menu-order: 19
+      x-menu-order: 20
       x-undo:
         operationId: DeletePrivateLocation
         parameters:
@@ -21463,7 +21724,7 @@ paths:
       summary: Delete a private location
       tags:
       - Synthetics
-      x-menu-order: 23
+      x-menu-order: 24
       x-undo:
         type: idempotent
     get:
@@ -21533,7 +21794,7 @@ paths:
       tags:
       - Synthetics
       x-codegen-request-body-name: body
-      x-menu-order: 20
+      x-menu-order: 22
       x-undo:
         type: idempotent
   /api/v1/synthetics/tests:
@@ -21609,7 +21870,7 @@ paths:
       tags:
       - Synthetics
       x-codegen-request-body-name: body
-      x-menu-order: 26
+      x-menu-order: 27
       x-undo:
         operationId: TODO
         parameters: []
@@ -21658,8 +21919,10 @@ paths:
       x-codegen-request-body-name: body
       x-menu-order: 1
       x-undo:
-        operationId: TODO
-        parameters: []
+        operationId: DeleteTests
+        parameters:
+        - name: body
+          template: '{"public_ids": ["{{ public_id }}"]}'
         type: unsafe
   /api/v1/synthetics/tests/api/{public_id}:
     get:
@@ -22124,7 +22387,7 @@ paths:
       summary: Get a test configuration
       tags:
       - Synthetics
-      x-menu-order: 24
+      x-menu-order: 25
       x-undo:
         type: safe
     put:
@@ -22181,7 +22444,7 @@ paths:
       tags:
       - Synthetics
       x-codegen-request-body-name: body
-      x-menu-order: 25
+      x-menu-order: 26
       x-undo:
         type: idempotent
   /api/v1/synthetics/tests/{public_id}/results:
@@ -22343,6 +22606,28 @@ paths:
       x-undo:
         type: idempotent
   /api/v1/synthetics/variables:
+    get:
+      description: Get the list of all Synthetics global variables.
+      operationId: ListGlobalVariables
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyntheticsListGlobalVariablesResponse'
+          description: OK
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIErrorResponse'
+          description: Forbidden
+      summary: Get all global variables
+      tags:
+      - Synthetics
+      x-menu-order: 15
+      x-undo:
+        type: safe
     post:
       description: Create a Synthetics global variable.
       operationId: CreateGlobalVariable
@@ -22376,7 +22661,7 @@ paths:
       tags:
       - Synthetics
       x-codegen-request-body-name: body
-      x-menu-order: 15
+      x-menu-order: 16
       x-undo:
         operationId: DeleteGlobalVariable
         parameters:
@@ -22418,7 +22703,7 @@ paths:
       summary: Delete a global variable
       tags:
       - Synthetics
-      x-menu-order: 18
+      x-menu-order: 19
       x-undo:
         type: idempotent
     get:
@@ -22453,7 +22738,7 @@ paths:
       summary: Get a global variable
       tags:
       - Synthetics
-      x-menu-order: 17
+      x-menu-order: 18
       x-undo:
         type: safe
     put:
@@ -22496,7 +22781,7 @@ paths:
       tags:
       - Synthetics
       x-codegen-request-body-name: body
-      x-menu-order: 16
+      x-menu-order: 17
       x-undo:
         type: idempotent
   /api/v1/tags/hosts:
@@ -22848,6 +23133,54 @@ paths:
       x-unstable: '**Note**: This endpoint is in public beta.
 
         If you have any feedback, contact [Datadog support](https://docs.datadoghq.com/help/).'
+  /api/v1/usage/audit_logs:
+    get:
+      description: Get hourly usage for audit logs.
+      operationId: GetUsageAuditLogs
+      parameters:
+      - description: 'Datetime in ISO-8601 format, UTC, precise to hour: `[YYYY-MM-DDThh]`
+          for usage beginning at this hour.'
+        in: query
+        name: start_hr
+        required: true
+        schema:
+          format: date-time
+          type: string
+      - description: 'Datetime in ISO-8601 format, UTC, precise to hour: `[YYYY-MM-DDThh]`
+          for usage ending
+
+          **before** this hour.'
+        in: query
+        name: end_hr
+        required: false
+        schema:
+          format: date-time
+          type: string
+      responses:
+        '200':
+          content:
+            application/json;datetime-format=rfc3339:
+              schema:
+                $ref: '#/components/schemas/UsageAuditLogsResponse'
+          description: OK
+        '400':
+          content:
+            application/json;datetime-format=rfc3339:
+              schema:
+                $ref: '#/components/schemas/APIErrorResponse'
+          description: Bad Request
+        '403':
+          content:
+            application/json;datetime-format=rfc3339:
+              schema:
+                $ref: '#/components/schemas/APIErrorResponse'
+          description: Forbidden - User is not authorized
+      summary: Get hourly usage for audit logs
+      tags:
+      - Usage Metering
+      x-menu-order: 31
+      x-undo:
+        type: safe
   /api/v1/usage/aws_lambda:
     get:
       description: Get hourly usage for lambda.
@@ -22932,10 +23265,10 @@ paths:
       x-menu-order: 19
       x-undo:
         type: safe
-  /api/v1/usage/compliance-monitoring:
+  /api/v1/usage/cspm:
     get:
-      description: Get hourly usage for Compliance Monitoring.
-      operationId: GetUsageComplianceMonitoring
+      description: Get hourly usage for Cloud Security Posture Management (CSPM).
+      operationId: GetUsageCloudSecurityPostureManagement
       parameters:
       - description: 'Datetime in ISO-8601 format, UTC, precise to hour: `[YYYY-MM-DDThh]`
           for usage beginning at this hour.'
@@ -22960,7 +23293,7 @@ paths:
           content:
             application/json;datetime-format=rfc3339:
               schema:
-                $ref: '#/components/schemas/UsageComplianceResponse'
+                $ref: '#/components/schemas/UsageCloudSecurityPostureManagementResponse'
           description: OK
         '400':
           content:
@@ -22974,10 +23307,58 @@ paths:
               schema:
                 $ref: '#/components/schemas/APIErrorResponse'
           description: Forbidden - User is not authorized
-      summary: Get hourly usage for Compliance Monitoring
+      summary: Get hourly usage for CSPM
       tags:
       - Usage Metering
       x-menu-order: 30
+      x-undo:
+        type: safe
+  /api/v1/usage/cws:
+    get:
+      description: Get hourly usage for Cloud Workload Security.
+      operationId: GetUsageCWS
+      parameters:
+      - description: 'Datetime in ISO-8601 format, UTC, precise to hour: `[YYYY-MM-DDThh]`
+          for usage beginning at this hour.'
+        in: query
+        name: start_hr
+        required: true
+        schema:
+          format: date-time
+          type: string
+      - description: 'Datetime in ISO-8601 format, UTC, precise to hour: `[YYYY-MM-DDThh]`
+          for usage ending
+
+          **before** this hour.'
+        in: query
+        name: end_hr
+        required: false
+        schema:
+          format: date-time
+          type: string
+      responses:
+        '200':
+          content:
+            application/json;datetime-format=rfc3339:
+              schema:
+                $ref: '#/components/schemas/UsageCWSResponse'
+          description: OK
+        '400':
+          content:
+            application/json;datetime-format=rfc3339:
+              schema:
+                $ref: '#/components/schemas/APIErrorResponse'
+          description: Bad Request
+        '403':
+          content:
+            application/json;datetime-format=rfc3339:
+              schema:
+                $ref: '#/components/schemas/APIErrorResponse'
+          description: Forbidden - User is not authorized
+      summary: Get hourly usage for Cloud Workload Security
+      tags:
+      - Usage Metering
+      x-menu-order: 31
       x-undo:
         type: safe
   /api/v1/usage/fargate:
@@ -24307,47 +24688,6 @@ paths:
       tags:
       - Authentication
       x-menu-order: 1
-      x-undo:
-        type: safe
-  /monitor/bulk_resolve:
-    post:
-      deprecated: true
-      description: Resolve monitor.
-      operationId: ResolveMonitor
-      requestBody:
-        content:
-          application/json:
-            schema:
-              items:
-                type: object
-              type: array
-        description: 'Array of group(s) to resolve for a given monitor_id, e.g.:
-
-          `{"monitor_id": "group_to_resolve"}`.
-
-
-          It supports multiple groups per monitor, e.g.:
-
-          `resolve: [{"monitor_id": "group_1"}, {"monitor_id": "group_2"}]`.
-
-
-          It can also resolve all triggered groups with the pseudo-group `ALL_GROUPS`:
-
-          `resolve: [{"monitor_id": "ALL_GROUPS"}]`.'
-        required: true
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                items:
-                  type: object
-                type: array
-          description: OK
-      summary: Resolve Monitor
-      tags:
-      - Monitors
-      x-codegen-request-body-name: body
       x-undo:
         type: safe
   /v0.3/traces:
